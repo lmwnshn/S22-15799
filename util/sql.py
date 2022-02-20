@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 import json
 
+import itertools
 from pprint import pprint
 import pglast.parser
 
@@ -139,8 +140,27 @@ def main():
     sqls = set(pp.get_grouped_dataframe_params().index.get_level_values(0))
     for i, sql in enumerate(sqls):
         process(catalog, sql)
-        print(i, sql)
-    pprint(catalog)
+        # print(i, sql)
+    # pprint(catalog)
+
+    with open('./candidate_actions.sql', "w") as f:
+        for table_name in catalog:
+            active_cols = [col.name for col in catalog[table_name] if col.active]
+
+            if active_cols == []:
+                continue
+
+            permutations = (
+                (table_name, permutation)
+                for num_cols in range(1, len(active_cols) + 1)
+                for permutation in itertools.permutations(active_cols, num_cols)
+            )
+            for table, permutation in permutations:
+                cols = ",".join(permutation)
+                cols_name = "_".join(permutation) + "_key"
+                index_name = f"action_{table}_{cols_name}"
+                sql = f"create index if not exists {index_name} on {table} ({cols});"
+                print(sql, file=f)
 
 if __name__ == '__main__':
     main()
