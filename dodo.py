@@ -23,7 +23,10 @@ def task_project1():
 
     return {
         "actions": [
-            'python3 ./forecast/preprocessor.py --query-log-folder %(workload_csv)s --output-parquet out.parquet.gzip --output-timestamp out.timestamp.txt',
+            'rm -rf ./workload/current/'
+            'mkdir -p ./workload/current/'
+            'cp %(workload_csv)s ./workload/current/'
+            'python3 ./forecast/preprocessor.py --query-log-folder ./workload/current --output-parquet out.parquet.gzip --output-timestamp out.timestamp.txt',
             'PYTHONPATH=.:$PYTHONPATH python3 util/sql.py',
             example_function,
             'echo "SELECT 1;" > actions.sql',
