@@ -137,9 +137,9 @@ def main():
     catalog = get_catalog()
     pp = Preprocessor(parquet_path='out.parquet.gzip')
     sqls = set(pp.get_grouped_dataframe_params().index.get_level_values(0))
-    for sql in sqls:
+    for i, sql in enumerate(sqls):
         process(catalog, sql)
-        print(sql)
+        print(i, sql)
     pprint(catalog)
 
 if __name__ == '__main__':
