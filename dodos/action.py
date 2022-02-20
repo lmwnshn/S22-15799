@@ -37,20 +37,20 @@ def task_action_generation():
             # Project 1.
             # Load HypoPG if necessary.
             'PGPASSWORD=project1pass psql -h localhost -d project1db -U project1user -c "CREATE EXTENSION hypopg;"',
+            "mkdir -p artifacts/forecast",
             # Preprocess queries.
             (
                 "python3 ./forecast/preprocessor.py "
                 "--query-log-folder ./workload/current "
-                "--output-parquet out.parquet.gzip "
+                "--output-parquet ./artifacts/forecast/out.parquet.gzip "
                 # '--output-timestamp out.timestamp.txt '
                 # "--output-queries out.queries.sql "
                 # '--output-query-templates out.templates.txt '
             ),
             # Generate a fake forecast.
-            "mkdir -p artifacts/forecast",
             (
                 "python3 ./forecast/fake_forecast.py "
-                "--preprocessor-parquet out.parquet.gzip "
+                "--preprocessor-parquet ./artifacts/forecast/out.parquet.gzip "
                 "--forecast-path ./artifacts/forecast/forecast.csv "
                 "--sampling-type once "
             ),

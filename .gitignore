@@ -28,3 +28,9 @@ __pycache__/
 dist/
 *.egg-info/
 *.egg
+
+# Project 1.
+.runner.db
+actions.sql
+config.json
+workload/
