@@ -136,14 +136,14 @@ def process(catalog, query):
 
 def main():
     catalog = get_catalog()
-    pp = Preprocessor(parquet_path='out.parquet.gzip')
+    pp = Preprocessor(parquet_path='./artifacts/forecast/out.parquet.gzip')
     sqls = set(pp.get_grouped_dataframe_params().index.get_level_values(0))
     for i, sql in enumerate(sqls):
         process(catalog, sql)
         # print(i, sql)
     # pprint(catalog)
 
-    with open('./actions.sql', "w") as f:
+    with open('./artifacts/action/actions.sql', "w") as f:
         for table_name in catalog:
             active_cols = [col.name for col in catalog[table_name] if col.active]
 

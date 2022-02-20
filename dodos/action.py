@@ -54,12 +54,10 @@ def task_action_generation():
                 "--forecast-path ./artifacts/forecast/forecast.csv "
                 "--sampling-type once "
             ),
-            # Generate actions; needs the Parquet.
+            # Generate actions; needs the Parquet. Hack: paths.
             "PYTHONPATH=.:$PYTHONPATH python3 util/sql.py",
             # Clean up.
             "rm out.parquet.gzip",
-            # Save results.
-            f"mv ./actions.sql {ARTIFACT_ACTIONS}",
         ],
         "file_dep": [],
         "targets": [ARTIFACT_ACTIONS],
