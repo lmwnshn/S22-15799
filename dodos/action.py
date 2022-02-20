@@ -11,9 +11,9 @@ from dodos import VERBOSITY_DEFAULT, default_artifacts_path, default_build_path
 ARTIFACTS_PATH = default_artifacts_path()
 BUILD_PATH = default_build_path()
 
-DEFAULT_DB = "np_as_spiel"
-DEFAULT_USER = "np_as_spiel_user"
-DEFAULT_PASS = "np_as_spiel_pass"
+DEFAULT_DB = "project1db"
+DEFAULT_USER = "project1user"
+DEFAULT_PASS = "project1pass"
 DB_CONN_STRING_AS_SPIEL = f"host=127.0.0.1 port=5432 dbname={DEFAULT_DB} user={DEFAULT_USER} password={DEFAULT_PASS} sslmode=disable application_name=psql"
 
 # Scratch work.
@@ -31,27 +31,40 @@ def task_action_generation():
     Action generation: generate actions to choose from.
     """
 
-    def generate_actions(args):
-        cmd = f"python3 ./action/generation/generate_create_index_tpcc.py --output-sql {ARTIFACT_ACTIONS} {args}"
-        return cmd
-
     return {
         "actions": [
             f"mkdir -p {ARTIFACTS_PATH}",
-            # Generate create index suggestions for TPC-C.
-            CmdAction(generate_actions),
+            # Project 1.
+            # Load HypoPG if necessary.
+            'PGPASSWORD=project1pass psql -h localhost -d project1db -U project1user -c "CREATE EXTENSION hypopg;"',
+            # Preprocess queries.
+            (
+                "python3 ./forecast/preprocessor.py "
+                "--query-log-folder ./workload/current "
+                "--output-parquet out.parquet.gzip "
+                # '--output-timestamp out.timestamp.txt '
+                # "--output-queries out.queries.sql "
+                # '--output-query-templates out.templates.txt '
+            ),
+            # Generate a fake forecast.
+            "mkdir -p artifacts/forecast",
+            (
+                "python3 ./forecast/fake_forecast.py "
+                "--preprocessor-parquet out.parquet.gzip "
+                "--forecast-path ./artifacts/forecast/forecast.csv "
+                "--sampling-type once "
+            ),
+            # Generate actions; needs the Parquet.
+            "PYTHONPATH=.:$PYTHONPATH python3 util/sql.py",
+            # Clean up.
+            "rm out.parquet.gzip",
+            # Save results.
+            f"mv ./actions.sql {ARTIFACT_ACTIONS}",
         ],
-        "file_dep": ["./action/generation/generate_create_index_tpcc.py"],
+        "file_dep": [],
         "targets": [ARTIFACT_ACTIONS],
         "uptodate": [False],
         "verbosity": VERBOSITY_DEFAULT,
-        "params": [
-            {
-                "name": "args",
-                "long": "args",
-                "default": "--min-num-cols 1 --max-num-cols 4",
-            },
-        ],
     }
 
 

@@ -143,7 +143,7 @@ def main():
         # print(i, sql)
     # pprint(catalog)
 
-    with open('./candidate_actions.sql', "w") as f:
+    with open('./actions.sql', "w") as f:
         for table_name in catalog:
             active_cols = [col.name for col in catalog[table_name] if col.active]
 

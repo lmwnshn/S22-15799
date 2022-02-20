@@ -15,11 +15,11 @@ from plumbum import local
 
 def task_project1():
     """
-    Generate actions.
+    Generate actions.sql and config.json.
+
+    Project #1 - PostgreSQL Auto Tuner
+    https://15799.courses.cs.cmu.edu/spring2022/project1.html
     """
-    def example_function(workload_csv, timeout):
-        print(f"dodo received workload CSV: {workload_csv}")
-        print(f"dodo received timeout: {timeout}")
 
     return {
         "actions": [
@@ -27,9 +27,7 @@ def task_project1():
             'mkdir -p ./workload/current/',
             # Naming: postgresql*.csv.
             'cp %(workload_csv)s ./workload/current/postgresql_workload.csv',
-            'python3 ./forecast/preprocessor.py --query-log-folder ./workload/current --output-parquet out.parquet.gzip --output-timestamp out.timestamp.txt',
-            'PYTHONPATH=.:$PYTHONPATH python3 util/sql.py',
-            example_function,
+            'doit --db-file=.runner.db action_recommendation',
             'echo "SELECT 1;" > actions.sql',
             'echo "SELECT 2;" >> actions.sql',
             'echo \'{"VACUUM": true}\' > config.json',
