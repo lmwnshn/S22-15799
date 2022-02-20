@@ -25,7 +25,8 @@ def task_project1():
         "actions": [
             'rm -rf ./workload/current/',
             'mkdir -p ./workload/current/',
-            'cp %(workload_csv)s ./workload/current/',
+            # Naming: postgresql*.csv.
+            'cp %(workload_csv)s ./workload/current/postgresql_workload.csv',
             'python3 ./forecast/preprocessor.py --query-log-folder ./workload/current --output-parquet out.parquet.gzip --output-timestamp out.timestamp.txt',
             'PYTHONPATH=.:$PYTHONPATH python3 util/sql.py',
             example_function,
