@@ -37,6 +37,8 @@ def task_action_generation():
             # Project 1.
             # Load HypoPG if necessary.
             'PGPASSWORD=project1pass psql -h localhost -d project1db -U project1user -c "CREATE EXTENSION IF NOT EXISTS hypopg;"',
+            # Analyze is probably a good idea.
+            'PGPASSWORD=project1pass psql -h localhost -d project1db -U project1user -c "ANALYZE;"',
             "mkdir -p artifacts/forecast",
             # Preprocess queries.
             (
