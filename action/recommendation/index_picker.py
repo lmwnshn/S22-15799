@@ -76,82 +76,84 @@ class IndexPickerCLI(cli.Application):
         actions_taken = []
         previous_returns = -math.inf
 
-        # Loop through all of the action batches, applying recommended
-        # actions as long as there is an improvement in overall returns.
-        with psycopg.connect(db_conn_string) as conn:
-            with conn.cursor() as cursor:
-                for batch in action_batches():
-                    batch = list(batch)
+        with open('actions.sql', 'w') as actions_sql:
+            # Loop through all of the action batches, applying recommended
+            # actions as long as there is an improvement in overall returns.
+            with psycopg.connect(db_conn_string) as conn:
+                with conn.cursor() as cursor:
+                    for batch in action_batches():
+                        batch = list(batch)
 
-                    # The current behavior of action recommendation is to
-                    # consider all the items of a batch together.
-                    # Therefore the following shuffle should have no effect
-                    # on recommendations; this is done for robustness.
-                    random.shuffle(batch)
+                        # The current behavior of action recommendation is to
+                        # consider all the items of a batch together.
+                        # Therefore the following shuffle should have no effect
+                        # on recommendations; this is done for robustness.
+                        random.shuffle(batch)
 
-                    # Prepare input to action selection; see docstring.
-                    write_action_batch(batch)
+                        # Prepare input to action selection; see docstring.
+                        write_action_batch(batch)
 
-                    # Loop action recommendation for the same batch until
-                    # there are no more good actions in the batch.
-                    while True:
-                        # Pick the next action.
-                        (retcode, stdout, stderr) = db.run()
-                        assert retcode == 0, f"Got return code: {retcode}"
+                        # Loop action recommendation for the same batch until
+                        # there are no more good actions in the batch.
+                        while True:
+                            # Pick the next action.
+                            (retcode, stdout, stderr) = db.run()
+                            assert retcode == 0, f"Got return code: {retcode}"
 
-                        # Get the recommended action.
-                        # TODO(WAN): Hack. Better interface?
-                        action = stdout.strip()
-                        err_lines = set()
-                        for line in stderr.split("\n"):
-                            if line.startswith("\tFinal returns:"):
-                                val_str = line.split(":")[1].strip()
-                                current_returns = float(val_str)
-                            if line.startswith("ERROR"):
-                                err_lines.add(line)
-                        for line in sorted(err_lines):
-                            print(line)
+                            # Get the recommended action.
+                            # TODO(WAN): Hack. Better interface?
+                            action = stdout.strip()
+                            err_lines = set()
+                            for line in stderr.split("\n"):
+                                if line.startswith("\tFinal returns:"):
+                                    val_str = line.split(":")[1].strip()
+                                    current_returns = float(val_str)
+                                if line.startswith("ERROR"):
+                                    err_lines.add(line)
+                            for line in sorted(err_lines):
+                                print(line)
 
-                        # Always remove the recommended action from the
-                        # current batch of actions.
-                        if action in batch:
-                            batch.remove(action)
+                            # Always remove the recommended action from the
+                            # current batch of actions.
+                            if action in batch:
+                                batch.remove(action)
 
-                        # Despite the above removal, an action may still
-                        # be recommended multiple times. This is because
-                        # actions.csv is not rewritten on each update;
-                        # the cost of rewriting is only paid when repeats
-                        # start showing up.
-                        if action in actions_taken:
-                            # A repeat showed up. Rewrite input and retry.
-                            write_action_batch(batch)
-                            continue
+                            # Despite the above removal, an action may still
+                            # be recommended multiple times. This is because
+                            # actions.csv is not rewritten on each update;
+                            # the cost of rewriting is only paid when repeats
+                            # start showing up.
+                            if action in actions_taken:
+                                # A repeat showed up. Rewrite input and retry.
+                                write_action_batch(batch)
+                                continue
 
-                        # Because action recommendation is on batched input,
-                        # it can find optimal actions within a batch,
-                        # but it cannot find optimal actions across batches.
-                        # Therefore recommended actions are only applied if
-                        # they improve the overall returns.
-                        # TODO(WAN): heuristic for improvement, say, 10%?
-                        if action == NOOP_ACTION or current_returns <= previous_returns:
-                            # The recommended action is not an improvement.
-                            # Start a new batch.
-                            break
-                        # The recommended action is an improvement.
-                        # Apply the recommended action.
-                        assert action not in actions_taken
-                        cursor.execute(action)
-                        conn.commit()
-                        # Log the action taken.
-                        actions_taken.append(action)
-                        print(
-                            f"{datetime.datetime.now()} "
-                            f"Applied action due to improved returns "
-                            f"(previous {previous_returns} -> "
-                            f"current {current_returns}): {action}",
-                            flush=True,
-                        )
-                        previous_returns = current_returns
+                            # Because action recommendation is on batched input,
+                            # it can find optimal actions within a batch,
+                            # but it cannot find optimal actions across batches.
+                            # Therefore recommended actions are only applied if
+                            # they improve the overall returns.
+                            # TODO(WAN): heuristic for improvement, say, 10%?
+                            if action == NOOP_ACTION or current_returns <= previous_returns:
+                                # The recommended action is not an improvement.
+                                # Start a new batch.
+                                break
+                            # The recommended action is an improvement.
+                            # Apply the recommended action.
+                            assert action not in actions_taken
+                            cursor.execute(action)
+                            conn.commit()
+                            # Log the action taken.
+                            actions_taken.append(action)
+                            print(
+                                f"{datetime.datetime.now()} "
+                                f"Applied action due to improved returns "
+                                f"(previous {previous_returns} -> "
+                                f"current {current_returns}): {action}",
+                                flush=True,
+                            )
+                            previous_returns = current_returns
+                            print(action, file=actions_sql, flush=True)
 
 
 if __name__ == "__main__":

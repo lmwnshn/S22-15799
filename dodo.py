@@ -27,10 +27,8 @@ def task_project1():
             'mkdir -p ./workload/current/',
             # Naming: postgresql*.csv.
             'cp %(workload_csv)s ./workload/current/postgresql_workload.csv',
-            'doit --db-file=.runner.db action_recommendation',
-            'echo "SELECT 1;" > actions.sql',
-            'echo "SELECT 2;" >> actions.sql',
             'echo \'{"VACUUM": true}\' > config.json',
+            'doit --db-file=.runner.db action_recommendation --database_game_args="--use_hypopg=False"',
         ],
         "uptodate": [False],
         "verbosity": 2,
