@@ -23,9 +23,9 @@ def task_project1():
 
     return {
         "actions": [
-            'rm -rf ./workload/current/'
-            'mkdir -p ./workload/current/'
-            'cp %(workload_csv)s ./workload/current/'
+            'rm -rf ./workload/current/',
+            'mkdir -p ./workload/current/',
+            'cp %(workload_csv)s ./workload/current/',
             'python3 ./forecast/preprocessor.py --query-log-folder ./workload/current --output-parquet out.parquet.gzip --output-timestamp out.timestamp.txt',
             'PYTHONPATH=.:$PYTHONPATH python3 util/sql.py',
             example_function,
