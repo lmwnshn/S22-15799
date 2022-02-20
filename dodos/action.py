@@ -56,8 +56,6 @@ def task_action_generation():
             ),
             # Generate actions; needs the Parquet. Hack: paths.
             "PYTHONPATH=.:$PYTHONPATH python3 util/sql.py",
-            # Clean up.
-            "rm out.parquet.gzip",
         ],
         "file_dep": [],
         "targets": [ARTIFACT_ACTIONS],
