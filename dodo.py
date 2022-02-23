@@ -13,6 +13,24 @@ from dodos.project1 import *
 from doit.action import CmdAction
 from plumbum import local
 
+
+def task_project1_setup():
+    """
+    Setup dependencies.
+
+    Project #1 - PostgreSQL Auto Tuner
+    https://15799.courses.cs.cmu.edu/spring2022/project1.html
+    """
+
+    return {
+        "actions": [
+            'doit --db-file=.runner.db action_selection_openspiel_build',
+        ],
+        "uptodate": [False],
+        "verbosity": 2,
+    }
+
+
 def task_project1():
     """
     Generate actions.sql and config.json.

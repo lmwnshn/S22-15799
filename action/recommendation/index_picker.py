@@ -76,7 +76,7 @@ class IndexPickerCLI(cli.Application):
         actions_taken = []
         previous_returns = -math.inf
 
-        with open('actions.sql', 'w') as actions_sql:
+        with open("actions.sql", "w") as actions_sql:
             # Loop through all of the action batches, applying recommended
             # actions as long as there is an improvement in overall returns.
             with psycopg.connect(db_conn_string) as conn:
