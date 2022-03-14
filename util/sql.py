@@ -1,11 +1,8 @@
-
-from dataclasses import dataclass
-import json
-
 import itertools
-from pprint import pprint
-import pglast.parser
+import json
+from dataclasses import dataclass
 
+import pglast.parser
 import psycopg
 
 from forecast.preprocessor import Preprocessor
@@ -16,6 +13,7 @@ class Column:
     name: str
     dtype: str
     active: bool = False
+
 
 def get_catalog():
     query = "SELECT table_name, column_name, udt_name FROM information_schema.columns where table_schema='public';"
@@ -41,6 +39,7 @@ def item_generator(json_input, lookup_key):
         for item in json_input:
             yield from item_generator(item, lookup_key)
 
+
 def grab(j, key):
     if isinstance(j, list):
         for item in j:
@@ -52,33 +51,34 @@ def grab(j, key):
             else:
                 yield from grab(v, key)
 
+
 def _parse_select_stmt(catalog, query, sel_json):
     # Get tables (table name -> list of aliases).
-    rangevars = list(grab(sel_json, 'RangeVar'))
+    rangevars = list(grab(sel_json, "RangeVar"))
     tables = set()
     aliases = {}
     for rv in rangevars:
-        table = rv['relname']
+        table = rv["relname"]
         tables.add(table)
-        if 'alias' in rv:
-            alias = rv['alias']['aliasname']
+        if "alias" in rv:
+            alias = rv["alias"]["aliasname"]
             aliases[alias] = aliases.get(alias, set())
             aliases[alias].add(table)
 
-    wheres = list(grab(sel_json, 'whereClause'))
-    columnrefs = list(grab(wheres, 'ColumnRef'))
+    wheres = list(grab(sel_json, "whereClause"))
+    columnrefs = list(grab(wheres, "ColumnRef"))
     targets = []
     for cr in columnrefs:
-        fields = cr['fields']
+        fields = cr["fields"]
         if len(fields) == 1:
-            if 'A_Star' in fields[0]:
-                targets.append('*')
+            if "A_Star" in fields[0]:
+                targets.append("*")
             else:
-                col = fields[0]['String']['str']
+                col = fields[0]["String"]["str"]
                 targets.append(col)
         elif len(fields) == 2:
-            alias = fields[0]['String']['str']
-            col = fields[1]['String']['str']
+            alias = fields[0]["String"]["str"]
+            col = fields[1]["String"]["str"]
             if alias not in aliases:
                 # This can happen by naming intermediates.
                 targets.append((alias, col))
@@ -94,12 +94,12 @@ def _parse_select_stmt(catalog, query, sel_json):
 
     def mark(table, column):
         if not column.active:
-            print(f'Marking {table}.{column.name} active because of {query}.')
+            print(f"Marking {table}.{column.name} active because of {query}.")
         column.active = True
 
     for target in targets:
         if isinstance(target, str):
-            if target == '*':
+            if target == "*":
                 for table in tables:
                     for column in catalog.get(table, []):
                         mark(table, column)
@@ -118,32 +118,33 @@ def _parse_select_stmt(catalog, query, sel_json):
 def _parse_update_stmt(catalog, query, upd_json):
     pass
 
+
 def process(catalog, query):
     # Parse the query with pglast.
     query_json = json.loads(pglast.parser.parse_sql_json(query))
-    for statement_json in query_json['stmts']:
-        statement = statement_json['stmt']
+    for statement_json in query_json["stmts"]:
+        statement = statement_json["stmt"]
         statement_keys = list(statement.keys())
         assert len(statement_keys) == 1
         statement_type = statement_keys[0]
         # print(statement_type, query)
-        if statement_type == 'SelectStmt':
+        if statement_type == "SelectStmt":
             _parse_select_stmt(catalog, query, statement[statement_type])
-        elif statement_type == 'UpdateStmt':
+        elif statement_type == "UpdateStmt":
             _parse_update_stmt(catalog, query, statement[statement_type])
         else:
             raise RuntimeError("Unknown statement type {}, query: {}.".format(statement_type, query))
 
 def main():
     catalog = get_catalog()
-    pp = Preprocessor(parquet_path='./artifacts/forecast/out.parquet.gzip')
+    pp = Preprocessor(parquet_path="./artifacts/forecast/out.parquet.gzip")
     sqls = set(pp.get_grouped_dataframe_params().index.get_level_values(0))
     for i, sql in enumerate(sqls):
         process(catalog, sql)
         # print(i, sql)
     # pprint(catalog)
 
-    with open('./artifacts/action/actions.sql', "w") as f:
+    with open("./artifacts/action/actions.sql", "w") as f:
         for table_name in catalog:
             active_cols = [col.name for col in catalog[table_name] if col.active]
 
@@ -159,8 +160,10 @@ def main():
                 cols = ",".join(permutation)
                 cols_name = "_".join(permutation) + "_key"
                 index_name = f"action_{table}_{cols_name}"
-                sql = f"create index if not exists {index_name} on {table} ({cols});"
+                # TODO(WAN): Hardcoded a fillfactor of 50.
+                sql = f"create index if not exists {index_name} on {table} ({cols}) with (fillfactor=50);"
                 print(sql, file=f)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
