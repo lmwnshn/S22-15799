@@ -60,9 +60,9 @@ def task_pgtune_tune():
     """
 
     def alter_sql():
-        with open(PGTUNE_CONF, 'r') as f:
+        with open(PGTUNE_CONF, "r") as f:
             for line in f:
-                if '=' in line:
+                if "=" in line:
                     key, val = [s.strip() for s in line.split("=")]
                     sql = f"ALTER SYSTEM SET {key}='{val}'"
                     cmd = CmdAction(
@@ -103,11 +103,9 @@ def task_pgtune_tune_more():
         disk.execute()
         disk = disk.out.strip()
 
-        is_hdd = CmdAction(
-            f"lsblk -o NAME,ROTA | grep {disk} | awk -F ' ' '{{print $NF}}'"
-        )
+        is_hdd = CmdAction(f"lsblk -o NAME,ROTA | grep {disk} | awk -F ' ' '{{print $NF}}'")
         is_hdd.execute()
-        is_hdd = is_hdd.out.strip() == '1'
+        is_hdd = is_hdd.out.strip() == "1"
 
         effective_io_concurrency = 0 if is_hdd else 200
         sql = f"ALTER SYSTEM SET effective_io_concurrency='{effective_io_concurrency}'"

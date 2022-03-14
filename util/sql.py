@@ -151,9 +151,11 @@ def main():
             if active_cols == []:
                 continue
 
+            max_cols_considered = 3
+
             permutations = (
                 (table_name, permutation)
-                for num_cols in range(1, len(active_cols) + 1)
+                for num_cols in range(1, min(max_cols_considered, len(active_cols) + 1))
                 for permutation in itertools.permutations(active_cols, num_cols)
             )
             for table, permutation in permutations:
