@@ -75,7 +75,7 @@ def task_pgtune_tune():
         "actions": [
             f"touch {BUILD_PATH / 'postgresql.conf'}",
             (
-                f"{PGTUNE} "
+                f"python2 {PGTUNE} "
                 f"--input-config={BUILD_PATH / 'postgresql.conf'} "
                 f"--output-config={PGTUNE_CONF} "
                 # The --version parameter doesn't have support for newer versions of PostgreSQL.
