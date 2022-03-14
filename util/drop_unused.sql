@@ -36,4 +36,3 @@ FROM (
            -- Order by index size.
          ORDER BY pg_relation_size(s.indexrelid) DESC
      ) AS cybertec;
-\gexec

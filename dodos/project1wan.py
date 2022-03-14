@@ -74,8 +74,10 @@ def task_project1():
             "mkdir -p ./workload/current/",
             # Naming: postgresql*.csv.
             "cp %(workload_csv)s ./workload/current/postgresql_workload.csv",
-            "PGPASSWORD=project1pass psql -d project1db -U project1user -hlocalhost -f util/drop_duplicate.sql",
-            "PGPASSWORD=project1pass psql -d project1db -U project1user -hlocalhost -f util/drop_unused.sql",
+            "rm -rf actions.sql",
+            "touch actions.sql",
+            "PGPASSWORD=project1pass psql --tuples-only --no-align -d project1db -U project1user -hlocalhost -f util/drop_duplicate.sql >> actions.sql",
+            "PGPASSWORD=project1pass psql --tuples-only --no-align -d project1db -U project1user -hlocalhost -f util/drop_unused.sql >> actions.sql",
             "echo '{\"VACUUM\": true}' > config.json",
             "doit --db-file=.runner.db action_recommendation",
         ],
