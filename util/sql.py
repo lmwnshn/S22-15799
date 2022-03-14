@@ -18,7 +18,7 @@ class Column:
 def get_catalog():
     query = "SELECT table_name, column_name, udt_name FROM information_schema.columns where table_schema='public';"
     catalog = {}
-    with psycopg.connect("dbname=project1db user=project1user password=project1pass") as conn:
+    with psycopg.connect("dbname=project1db user=project1user password=project1pass host=localhost") as conn:
         with conn.cursor() as cur:
             cur.execute(query)
             res = cur.fetchall()
