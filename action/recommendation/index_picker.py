@@ -1,6 +1,7 @@
 import datetime
 import math
 import random
+import re
 
 import psycopg
 from plumbum import cli, local
@@ -154,6 +155,8 @@ class IndexPickerCLI(cli.Application):
                             )
                             previous_returns = current_returns
                             print(action, file=actions_sql, flush=True)
+                            idx_name = re.match("create index if not exists (.*) on .*", action).group(1)
+                            print(f"COMMENT ON INDEX {idx_name} IS 'terrier';", file=actions_sql, flush=True)
 
 
 if __name__ == "__main__":
