@@ -22,7 +22,7 @@ def task_ci_python():
     """
     CI: this should be run and all warnings fixed before pushing commits.
     """
-    folders = ["action", "behavior", "dodos", "forecast", "pilot"]
+    folders = ["action", "behavior", "dodos", "forecast", "pilot", "util"]
     config = {"check": "--check" if str(get_var("check")).lower() == "true" else ""}
 
     return {
