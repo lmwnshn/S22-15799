@@ -46,6 +46,7 @@ def task_project1_setup():
 
     return {
         "actions": [
+            "sudo apt-get install postgresql-14-hypopg",
             "doit --db-file=.runner.db pgtune_tune",
             "doit --db-file=.runner.db pgtune_tune_more",
             "doit --db-file=.runner.db action_selection_openspiel_build",
